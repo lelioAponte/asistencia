@@ -1,20 +1,40 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import client from "../supabase/client";
 
 export const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorMessages, setErrorMessages] = useState("");
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSingUp = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     try {
       const { data, error } = await client.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      setIsModalOpen(true); // Muestra el modal de éxito
+    } catch (error) {
+      console.error("Error al registrarse:", error);
+      setErrorMessages(error.message);
+      setIsErrorModalOpen(true); // Muestra el modal de error
+    }
+  };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    try {
+      const { data, error } = await client.auth.signInWithPassword({
         email,
         password,
       });
@@ -25,24 +45,70 @@ export const AuthPage = () => {
     }
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const closeErrorModal = () => {
+    setIsErrorModalOpen(false);
+  };
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-customblue">
+      {/* Modal de Registro Exitoso */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
+            <h2 className="text-2xl font-semibold text-center mb-4 text-green-600">
+              ¡Registro Exitoso!
+            </h2>
+            <p className="text-center text-gray-700 mb-6">
+              Tu cuenta ha sido creada exitosamente.
+            </p>
+            <button
+              onClick={closeModal}
+              className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-500"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Error */}
+      {isErrorModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
+            <h2 className="text-2xl font-semibold text-center mb-4 text-red-600">
+              Error
+            </h2>
+            <p className="text-center text-gray-700 mb-6">{errorMessages}</p>
+            <button
+              onClick={closeErrorModal}
+              className="w-full bg-red-600 text-white py-2 rounded-md hover:bg-red-500"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Columna izquierda - Imagen */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center " src="https://www.unipamplona.edu.co/unipamplona/portalIG/home_1/recursos/noticias_2023/junio/28062023/fondo_acre_azul.jpg">
+      <div className="hidden lg:flex w-1/2 items-center justify-center">
         <img
-          src="https://www.unipamplona.edu.co/unipamplona/portalIG/home_1/recursos/noticias_2023/junio/28062023/fondo_acre_azul.jpg"
+          src="https://www.unipamplona.edu.co/unipamplona/portalIG/home_1/recursos/anuncios_2021/noviembre/16112021/foto_1_acreditacion.jpg"
           alt="Brand Logo"
-          className="w-2/3 h-auto"
+          className="object-cover w-full h-full"
         />
       </div>
 
       {/* Columna derecha - Formulario */}
-      <div className="flex w-full lg:w-1/2 flex-col justify-center px-6 py-12 lg:px-8 bg-gray-100">
+      <div className="flex w-full lg:w-1/2 flex-col justify-center px-6 py-12 lg:px-8 bg-gray-100 ">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             alt="Your Company"
-            src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
-            className="mx-auto h-10 w-auto"
+            src="https://www.unipamplona.edu.co/unipamplona/portalIG/home_1/recursos/corporativo/26072024/unipamplona_64_.png"
+            className="mx-auto h-30 w-auto"
           />
           <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-gray-900">
             Sign in to your account
@@ -104,7 +170,6 @@ export const AuthPage = () => {
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
                 >
                   {showPassword ? (
-                    // Ojo cerrado para ocultar contraseña
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -119,7 +184,6 @@ export const AuthPage = () => {
                       <path d="M1 1l22 22" />
                     </svg>
                   ) : (
-                    // Ojo abierto para mostrar contraseña
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="h-5 w-5"
@@ -141,21 +205,30 @@ export const AuthPage = () => {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                onClick={handleSingUp}
+                className="flex w-full justify-center rounded-md bg-customblue px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                onClick={handleSignUp}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                className="flex w-full justify-center rounded-md bg-customRed px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                onClick={handleSignIn}
               >
                 Sign in
               </button>
             </div>
 
-            {/* Botón de inicio de sesión con Google */}
             <div>
               <button
                 type="button"
                 className="flex w-full justify-center rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
+                  src="https://banner2.cleanpng.com/20190731/uqk/kisspng-google-icon-1713874997698.webp"
                   alt="Google Logo"
                   className="h-5 w-5 mr-2"
                 />
@@ -163,16 +236,6 @@ export const AuthPage = () => {
               </button>
             </div>
           </form>
-
-          <p className="mt-10 text-center text-sm text-gray-500">
-            Not a member?{" "}
-            <a
-              href="#"
-              className="font-semibold text-indigo-600 hover:text-indigo-500"
-            >
-              Start a 14 day free trial
-            </a>
-          </p>
         </div>
       </div>
     </div>

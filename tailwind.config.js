@@ -5,7 +5,12 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        customblue: '#003366 ', // Nombre personalizado para el color
+        customRed: '#ad3333'
+      },
+    },
   },
   plugins: [],
 }
